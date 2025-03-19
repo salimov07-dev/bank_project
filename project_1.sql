@@ -1,6 +1,8 @@
 ﻿create database project_1
 go 
 use project_1
+-- Salimov
+
 GO
 CREATE TABLE users (
     id int PRIMARY KEY identity(1,1),
