@@ -1,7 +1,6 @@
 ﻿create database project_1
 go 
-use project_1
--- Salimov
+use project_1 
 
 GO
 CREATE TABLE users (
