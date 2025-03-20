@@ -1,6 +1,6 @@
 import pyodbc
 import pprint
-# salimov
+
 connection = pyodbc.connect(
     'DRIVER={SQL Server};'
     'Server=LAPTOP-5B8TNS55;'
