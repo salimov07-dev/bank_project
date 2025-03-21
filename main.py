@@ -38,7 +38,7 @@ class ControlTransactions:
     # Kartadan kartaga pul o‘tkazmalar
     @staticmethod
     def transfer_to_card():
-        card_number = input('Enter your Card number (wihtout space): ').strip()
+        card_number = input('Enter your Card number (without space): ').strip()
         user_name = input('Enter your name: ').strip()
         to_card = input('Which card do you want to transfer money to? (card number): ').strip()
 
@@ -50,7 +50,6 @@ class ControlTransactions:
         cursor.execute(query, (user_name, card_number))
         result = cursor.fetchone()
 
-        # Преобразование значения "8600222233334444" типа varchar привело к переполнению столбца типа int.
         if not result:
             print("Error: User or card number not found.")
             return
@@ -61,18 +60,38 @@ class ControlTransactions:
         cursor.execute("SELECT balance FROM cards WHERE card_number = ?", (card_number,))
         balance_result = cursor.fetchone()
 
-        minus_query = ''' update cards set balance = balance - ? where card_number = ? '''
-        plus_query = ''' update cards set balance = balance + ? where card_number = ? '''
+        if balance_result is None:
+            print("Error: Your card number is not found in the database.")
+            return
+
+        balance = balance_result[0]
+
+        if amount > balance:
+            print("Error: Insufficient balance.")
+            return
+
+        cursor.execute("SELECT id FROM cards WHERE card_number = ?", (to_card,))
+        to_card_result = cursor.fetchone()
+
+        if to_card_result is None:
+            print("Error: Destination card not found.")
+            return
+
+        to_card_id = to_card_result[0]
+
+        minus_query = ''' UPDATE cards SET balance = balance - ? WHERE card_number = ? '''
+        plus_query = ''' UPDATE cards SET balance = balance + ? WHERE id = ? '''
 
         cursor.execute(minus_query, (amount, card_number))
-        cursor.execute(plus_query, (amount, to_card))
+        cursor.execute(plus_query, (amount, to_card_id))
 
         transaction_type = 'transfer'
 
-        query = """EXEC insert_into_transactions ?, ?, ?, ?"""
-        cursor.execute(query, (id_user, to_card, transaction_type, amount))
+        query = """ EXEC insert_into_transactions ?, ?, ?, ? """
+        cursor.execute(query, (id_user, to_card_id, transaction_type, amount))
         connection.commit()
 
+        print("Transaction completed successfully.")
 
         # select * from cards
         # update cards set balance = balance - amount where card_number = card_number
