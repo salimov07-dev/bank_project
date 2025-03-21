@@ -38,7 +38,45 @@ class ControlTransactions:
     # Kartadan kartaga pul o‘tkazmalar
     @staticmethod
     def transfer_to_card():
-        pass
+        card_number = input('Enter your Card number (wihtout space): ').strip()
+        user_name = input('Enter your name: ').strip()
+        to_card = input('Which card do you want to transfer money to? (card number): ').strip()
+
+        if not card_number or not user_name:
+            print("Error: Card number and name cannot be empty.")
+            return
+
+        query = "SELECT * FROM dbo.getusercard(?,?)"
+        cursor.execute(query, (user_name, card_number))
+        result = cursor.fetchone()
+
+        # Преобразование значения "8600222233334444" типа varchar привело к переполнению столбца типа int.
+        if not result:
+            print("Error: User or card number not found.")
+            return
+
+        id_user = result[0]
+        amount = int(input('Enter Amount: '))
+
+        cursor.execute("SELECT balance FROM cards WHERE card_number = ?", (card_number,))
+        balance_result = cursor.fetchone()
+
+        minus_query = ''' update cards set balance = balance - ? where card_number = ? '''
+        plus_query = ''' update cards set balance = balance + ? where card_number = ? '''
+
+        cursor.execute(minus_query, (amount, card_number))
+        cursor.execute(plus_query, (amount, to_card))
+
+        transaction_type = 'transfer'
+
+        query = """EXEC insert_into_transactions ?, ?, ?, ?"""
+        cursor.execute(query, (id_user, to_card, transaction_type, amount))
+        connection.commit()
+
+
+        # select * from cards
+        # update cards set balance = balance - amount where card_number = card_number
+        # update card set balance = balance + amount where card_number - toc_ard
 
     # Kunlik, haftalik tranzaksiyalarni ko‘rish
     @staticmethod
@@ -90,12 +128,15 @@ class ControlTransactions:
         if inp == 'd':  # Deposit
             transaction_type = 'deposit'
             new_balance = balance + amount
+            to_card = id_user
+            id_user = None
         elif inp == 'w':  # Withdraw
             if amount > balance:
                 print("Error: Not enough balance.")
                 return
             transaction_type = 'withdrawal'
             new_balance = balance - amount
+            to_card = None
         else:
             print("Error: Invalid input.")
             return
@@ -109,8 +150,8 @@ class ControlTransactions:
             print("Error: Balance update failed.")
             return
 
-        query = """EXEC insert_into_transactions ?, ?, ?"""
-        cursor.execute(query, (id_user, transaction_type, amount))
+        query = """EXEC insert_into_transactions ?, ?, ?, ?"""
+        cursor.execute(query, (id_user, to_card, transaction_type, amount))
         connection.commit()
         print("Transaction recorded successfully.")
 
@@ -170,7 +211,7 @@ while True:
             print_menu_ManageTransactions()
             command = int(input('enter command number: ').capitalize())
             if command == 1:
-                pass
+                ControlTransactions.transfer_to_card()
                 # Kartadan kartaga pul o‘tkazmalar
             elif command == 2:
                 dw = input('Enter (day / week): ').strip().lower()
