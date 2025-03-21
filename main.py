@@ -44,11 +44,9 @@ class ControlTransactions:
         day = 1
         week = 7
         if var == 'day':
-            return f'''select s1.id,s1.from_card_id,s1.to_card_id,amount,s1.status,s1.created_at,transaction_type from transactions s1
-where s1.created_at between DATEADD(DAY,-{day},s1.created_at) and GETDATE()'''
+            return f''' select * from dbo.get_transactions({day}) '''
         else:
-            return f'''select s1.id,s1.from_card_id,s1.to_card_id,amount,s1.status,s1.created_at,transaction_type from transactions s1
-where s1.created_at between DATEADD(DAY,-{week},s1.created_at) and GETDATE()'''
+            return f''' select * from dbo.get_transactions({week}) '''
 
     # Yirik tranzaksiyalarni avtomatik tekshirish
     @staticmethod
