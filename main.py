@@ -24,7 +24,7 @@ class ManageUsers:
 
     @staticmethod
     def check_balance(user_id):
-        return f'''select id,name,email,status,total_balance from users where id = '{user_id}' '''
+        return f'''select * from dbo.GetUserByID({user_id}) '''
 
     def manage_user_cards(self):
         pass

@@ -171,3 +171,14 @@ END;
 create view get_active_users as
 select * from users 
 where last_active_at between DATEADD(MONTH,-1,last_active_at) and GETDATE()
+
+
+CREATE FUNCTION [dbo].[GetUserByID]
+(
+    @user_id int
+)
+RETURNS TABLE AS RETURN
+(
+	select id,name,email,status,total_balance from users 
+	where id = @user_id
+)  
