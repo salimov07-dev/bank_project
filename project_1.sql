@@ -168,3 +168,6 @@ BEGIN
     WHERE i.transaction_type = 'withdrawal' AND i.status = 'pending';
 END;
   
+create view get_active_users as
+select * from users 
+where last_active_at between DATEADD(MONTH,-1,last_active_at) and GETDATE()

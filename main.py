@@ -20,7 +20,7 @@ class ManageUsers:
 
     @staticmethod
     def get_active_users():
-        return "select * from users where last_active_at between DATEADD(MONTH,-1,last_active_at) and GETDATE()"
+        return """select * from get_active_users"""
 
     @staticmethod
     def check_balance(user_id):
@@ -173,7 +173,6 @@ while True:
                 break
     else:
         break
-
 
 connection.commit()
 
