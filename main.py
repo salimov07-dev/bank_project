@@ -2,10 +2,12 @@ import pyodbc
 import pprint
 
 connection = pyodbc.connect(
-    'DRIVER={SQL Server};'
-    'Server=LAPTOP-5B8TNS55;'
-    'Database=project_1;'
-    'trusted_Connection=yes;',
+    "DRIVER={SQL Server};"
+    "SERVER=192.168.1.60,1433;"  # Yoki kompyuter nomi
+    "DATABASE=project_1;"
+    "UID=project;"  # SQL Server foydalanuvchi nomi
+    "PWD=qwerty123;"  # SQL Server paroli
+    "TrustServerCertificate=yes;",  # Sertifikat xatolarini oldini oladi
     timeout=60
 )
 
@@ -57,43 +59,60 @@ class ControlTransactions:
     @staticmethod
     def withdraw_deposit():
         inp = input('withdraw / deposit (w/d): ').lower().strip()
-        # for deposit
-        if inp == 'd':
-            card_number = input('Enter your card number (without space): ').strip()
-            user_name = input('Enter your name: ').strip()
 
-            query = "SELECT s2.id FROM users s1 JOIN cards s2 ON s1.id = s2.user_id WHERE s1.name = ? AND s2.card_number = ?"
-            cursor.execute(query, (user_name, card_number))
-            result = cursor.fetchone()
+        card_number = input('Enter your card number (without space): ').strip()
+        user_name = input('Enter your name: ').strip()
 
-            if result:
-                id_user = result[0]
+        if not card_number or not user_name:
+            print("Error: Card number and name cannot be empty.")
+            return
 
-                amount = int(input('Enter Amount: '))
+        query = "SELECT * FROM dbo.getusercard(?,?)"
+        cursor.execute(query, (user_name, card_number))
+        result = cursor.fetchone()
 
-                cursor.execute("SELECT balance FROM cards WHERE card_number = ?", (card_number,))
-                balance = cursor.fetchone()
+        if not result:
+            print("Error: User or card number not found.")
+            return
 
-                if balance:
-                    balance = balance[0]
-                else:
-                    print("Error: Card not found.")
-                    return
+        id_user = result[0]
+        amount = int(input('Enter Amount: '))
 
-                new_balance = balance + amount
-                cursor.execute("UPDATE cards SET balance = ? WHERE card_number = ?", (new_balance, card_number))
-                connection.commit()
-                print("Successfully updated balance.")
+        cursor.execute("SELECT balance FROM cards WHERE card_number = ?", (card_number,))
+        balance_result = cursor.fetchone()
 
-                query = """INSERT INTO transactions (from_card_id, to_card_id, amount, status, transaction_type, is_flagged) 
-                           VALUES (?, NULL, ?, 'pending', 'withdrawal', 0);"""
-                cursor.execute(query, (id_user, amount))
-                connection.commit()
-                print("Transaction recorded successfully.")
-            else:
-                print("Error: User or card number not found.")
-        # for withdraw
-        pass
+        if not balance_result:
+            print("Error: Card not found.")
+            return
+
+        balance = balance_result[0]
+
+        if inp == 'd':  # Deposit
+            transaction_type = 'deposit'
+            new_balance = balance + amount
+        elif inp == 'w':  # Withdraw
+            if amount > balance:
+                print("Error: Not enough balance.")
+                return
+            transaction_type = 'withdrawal'
+            new_balance = balance - amount
+        else:
+            print("Error: Invalid input.")
+            return
+
+        cursor.execute("UPDATE cards SET balance = ? WHERE card_number = ?", (new_balance, card_number))
+
+        if cursor.rowcount > 0:
+            connection.commit()
+            print("Successfully updated balance.")
+        else:
+            print("Error: Balance update failed.")
+            return
+
+        query = """EXEC insert_into_transactions ?, ?, ?"""
+        cursor.execute(query, (id_user, transaction_type, amount))
+        connection.commit()
+        print("Transaction recorded successfully.")
 
 
 def print_menu():
