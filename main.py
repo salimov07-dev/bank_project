@@ -1,5 +1,5 @@
 import pyodbc
-import pprint 
+import pprint
 
 connection = pyodbc.connect(
     "DRIVER={SQL Server};"
@@ -8,7 +8,7 @@ connection = pyodbc.connect(
     "UID=project;"  # SQL Server foydalanuvchi nomi
     "PWD=qwerty123;"  # SQL Server paroli
     "TrustServerCertificate=yes;",  # Sertifikat xatolarini oldini oladi
-timeout=60
+    timeout=60
 )
 
 cursor = connection.cursor()
@@ -204,6 +204,11 @@ class ControlTransactions:
             return
 
 
+class OtherFunctions:
+    def balance(self):
+        pass
+
+
 def print_menu():
     print("\nBank Project:")
     print("1. Foydalanuvchilarni boshqarish")
@@ -236,6 +241,7 @@ def print_menu_other_functions():
     print('1. Hisobot generatsiyasi (kunlik, haftalik, oylik)')
     print('2. Bloklangan va tekshirilayotgan kartalarni kuzatish')
     print('3. Har bir foydalanuvchining tranzaksiya tarixini ko‘rish')
+    print('4. Balansni tahlil qilish (o‘rtacha balans, eng ko‘p tranzaksiya qilgan foydalanuvchi)')
 
 
 txt = 'Enter command number: '
@@ -302,6 +308,8 @@ while True:
 
                 pprint.pp('''user_id | card_number | from_card_id | to_card_id | transaction_type''')
                 pprint.pp(get_users_1.fetchall(), width=70, compact=True)
+            elif command == 4:
+                pass
     else:
         break
 
