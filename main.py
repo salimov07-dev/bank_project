@@ -1,14 +1,14 @@
 import pyodbc
-import pprint
+import pprint 
 
 connection = pyodbc.connect(
     "DRIVER={SQL Server};"
-    "SERVER=192.168.1.60,1433;"  # Yoki kompyuter nomi
+    "SERVER=172.25.59.2,1433"  # Yoki kompyuter nomi
     "DATABASE=project_1;"
     "UID=project;"  # SQL Server foydalanuvchi nomi
     "PWD=qwerty123;"  # SQL Server paroli
     "TrustServerCertificate=yes;",  # Sertifikat xatolarini oldini oladi
-    timeout=60
+timeout=60
 )
 
 cursor = connection.cursor()
