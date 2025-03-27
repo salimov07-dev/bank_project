@@ -1,6 +1,7 @@
 import pprint
 
 import pyodbc
+import pandas
 
 import MangeUsers as Mu
 import ControlTransactions as Ct
@@ -76,15 +77,32 @@ while True:
         while True:
             Menus.print_menu_other_functions()
             command = int(input(f'{txt}'))
-            if command == 3:  # salimov
+            if command == 1: # salimov
+                transaction_period = input("Enter day period (daily | weekly | monthly): ")
+                OtherFunc.OtherFunctions.report_generation(transaction_period) 
+            elif command == 2:
+                pass
+            elif command == 3:  # salimov
                 user_id_2 = input('Enter user id:')
                 query_2 = ''' exec get_user_transactions @user_id = ? '''
                 get_users_1 = cursor.execute(query_2, (user_id_2,))
 
                 pprint.pp('''user_id | card_number | from_card_id | to_card_id | transaction_type''')
                 pprint.pp(get_users_1.fetchall(), width=70, compact=True)
-            elif command == 4:
-                OtherFunc.OtherFunctions.balance()
+            elif command == 4: # salimov
+                query_3 = ''' select avg(balance) from cards '''
+                res_1 = cursor.execute(query_3)
+                print('Hamma userlarning o‘rtacha balansi:')
+                pprint.pp(res_1.fetchone()[0],width=100)
+
+                print()
+                print('''Eng ko‘p tranzaksiya qilgan foydalanuvchi(lar) ''')
+                print('''Name | Phone Number | Status | Total_balance | blocked''')
+                res = cursor.execute(OtherFunc.OtherFunctions.analysis_balance())
+                pprint.pp(res.fetchall(),width=100)
+                print()
+            else:
+                break
     else:
         break
 
