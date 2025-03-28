@@ -1,7 +1,9 @@
+import datetime
 import pprint
-
 import pyodbc
 import pandas
+from datetime import *
+import csv
 
 import MangeUsers as Mu
 import ControlTransactions as Ct
@@ -51,9 +53,6 @@ while True:
                     print('Bunday foydalanuvchi yo`q ❗')
                 else:
                     pprint.pp(res)
-            elif command == 4:  # in progress # salimov
-                pass
-                # Foydalanuvchi kartalarining limitini nazorat qilish
             else:
                 break
     elif command == 2:
@@ -61,27 +60,35 @@ while True:
             Menus.print_menu_ManageTransactions()
             command = int(input(f'{txt}'))
             if command == 1:  # salimov
+                # Kartadan kartaga pul o‘tkazmalar
                 Ct.ControlTransactions.transfer_to_card()
             elif command == 2:  # salimov
+                # Kunlik, haftalik tranzaksiyalarni ko‘rish
                 transaction_period = input('Enter (day / week): ').strip().lower()
                 result = Ct.ControlTransactions.get_transactions(transaction_period)
-            elif command == 3:
-                pass
-                # Yirik tranzaksiyalarni avtomatik tekshirish (150 mln so‘mdan oshsa)
-            elif command == 4:  # salimov
-                Ct.ControlTransactions.withdraw_deposit()
+            elif command == 3:  # salimov
                 # Pul yechish va depozit qilish
+                Ct.ControlTransactions.withdraw_deposit()
             else:
                 break
     elif command == 3:
         while True:
             Menus.print_menu_other_functions()
             command = int(input(f'{txt}'))
-            if command == 1: # salimov
+            if command == 1:  # salimov
                 transaction_period = input("Enter day period (daily | weekly | monthly): ")
-                OtherFunc.OtherFunctions.report_generation(transaction_period) 
+                OtherFunc.OtherFunctions.report_generation(transaction_period)
             elif command == 2:
-                pass
+                new_user_name = input('Enter Your Name: ').title().strip()
+                new_user_phone = int(input('Enter your Phone Number: ').replace('+', '').replace(' ', ''))
+                new_user_email = input('Enter your email: ')
+                print('-- Card details --')
+                new_user_card_type = input('Enter Your card type (debit / credit / savings) ')
+                query_1 = ''' exec insert_proc_users ?, ?, ?, ? '''
+                cursor.execute(query_1, (new_user_name, new_user_phone, new_user_email, new_user_card_type))
+                print('Completed successfully ✅')
+                print()
+                connection.commit()
             elif command == 3:  # salimov
                 user_id_2 = input('Enter user id:')
                 query_2 = ''' exec get_user_transactions @user_id = ? '''
@@ -89,20 +96,41 @@ while True:
 
                 pprint.pp('''user_id | card_number | from_card_id | to_card_id | transaction_type''')
                 pprint.pp(get_users_1.fetchall(), width=70, compact=True)
-            elif command == 4: # salimov
+            elif command == 4:  # salimov
                 query_3 = ''' select avg(balance) from cards '''
                 res_1 = cursor.execute(query_3)
                 print('Hamma userlarning o‘rtacha balansi:')
-                pprint.pp(res_1.fetchone()[0],width=100)
+                pprint.pp(res_1.fetchone()[0], width=100)
 
                 print()
                 print('''Eng ko‘p tranzaksiya qilgan foydalanuvchi(lar) ''')
                 print('''Name | Phone Number | Status | Total_balance | blocked''')
                 res = cursor.execute(OtherFunc.OtherFunctions.analysis_balance())
-                pprint.pp(res.fetchall(),width=100)
+                pprint.pp(res.fetchall(), width=100)
                 print()
             else:
                 break
+    elif command == 4:
+        query = '''
+        SELECT id, name, phone_number, email, last_active_at, total_balance
+        FROM users 
+        WHERE status = 'blocked'
+        ORDER BY last_active_at DESC;
+        '''
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        filename = f"Reports\\blocked_users\\blocked_users_report_{datetime.now().strftime('%Y-%m-%d')}.csv"
+
+        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            writer.writerow(["ID", "Name", "Phone Number", "Email", "Last Active", "Total Balance"])
+
+            for row in results:
+                writer.writerow(row)
+
+        print(f"✅ Bloklangan foydalanuvchilar ro‘yxati saqlandi: {filename}")
     else:
         break
 

@@ -1,4 +1,5 @@
 import pandas as pd
+import pyodbc
 from sqlalchemy import create_engine
 
 # ✅ Use SQLAlchemy for a better connection
@@ -6,9 +7,10 @@ engine = create_engine(
     "mssql+pyodbc://project:qwerty123@172.25.59.2:1433/project_1?driver=ODBC+Driver+17+for+SQL+Server"
 )
 
+
 class OtherFunctions:
     @staticmethod
-    def report_generation(report_type: str): # salimov
+    def report_generation(report_type: str):  # salimov
         query = """
         select 
             CAST(created_at as DATE) as report_date,
@@ -34,9 +36,15 @@ class OtherFunctions:
                 print(f"❌ Error generating report: {e}")
         else:
             print("❌ Invalid report type. Choose 'daily', 'weekly', or 'monthly'.")
+
     @staticmethod
-    def analysis_balance(): # salimov
+    def analysis_balance():  # salimov
         return ''' select * from Transaction_cnt() '''
+
     @staticmethod
-    def track_blocked_cards(): 
+    def view_transactions():
         pass
+        # main.py
+    @staticmethod
+    def register_user():
+       pass
