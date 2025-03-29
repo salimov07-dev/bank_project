@@ -2,7 +2,11 @@ import smtplib
 import random
 import pyodbc
 import pprint
+import os
+import tabulate
 from email.message import EmailMessage
+from datetime import time
+from MangeUsers.main import clear_screen
 
 connection = pyodbc.connect(
     "DRIVER={SQL Server};"
@@ -18,15 +22,17 @@ cursor = connection.cursor()
 
 verification_codes = {}
 
-
 class ControlTransactions:
+    def clear_screen(): # Salimov
+        """ Ekranni tozalash funksiyasi """
+        os.system("cls" if os.name == "nt" else "clear")
 
-    def send_verification_email(to_email):
+    def send_verification_email(to_email): # Salimov
         """Foydalanuvchiga Gmail orqali tasdiqlash kodini jo‘natadi"""
         verification_code = str(random.randint(100000, 999999))  # 6 xonali kod
         verification_codes[to_email] = verification_code  # Kodni saqlash
 
-        msg = EmailMessage()
+        msg = EmailMessage() # Salimov
         msg.set_content(f"Your transaction verification code is: {verification_code}")
         msg['Subject'] = "Transaction Verification Code"
         msg['To'] = to_email
@@ -45,7 +51,7 @@ class ControlTransactions:
         except Exception as e:
             print(f"❌ Email sending error: {e}")
 
-    def verify_transaction(to_email, user_code):
+    def verify_transaction(to_email, user_code): # Salimov
         """Foydalanuvchi kiritgan kodni tekshiradi"""
         expected_code = verification_codes.get(to_email)
 
@@ -57,70 +63,85 @@ class ControlTransactions:
             return False
 
     @staticmethod
-    def transfer_to_card():  # salimov
-        """Kartadan kartaga pul o`tkazmalar"""
-        card_number = input('Enter your Card number (without space): ').strip()
-        user_name = input('Enter your name: ').strip()
-        to_card = input('Which card do you want to transfer money to? (card number): ').strip()
+    def transfer_to_card(): # Salimov
+        """💳 Kartadan kartaga pul o‘tkazmalar"""
+        clear_screen()
+        print("=" * 50)
+        print(" " * 12 + "💳 PUL O‘TKAZMALAR MENYUSI")
+        print("=" * 50)
+
+        card_number = input("🔹 Enter your Card Number (without spaces): ").strip()
+        user_name = input("🔹 Enter your Name: ").strip()
+        to_card = input("🔹 Recipient Card Number: ").strip()
 
         if not card_number or not user_name or not to_card:
-            print("Error: All fields are required.")
+            print("❌ Xato: Barcha maydonlarni to‘ldiring!")
             return
-
 
         cursor.execute("SELECT id, is_blocked, balance FROM cards WHERE card_number = ?", (card_number,))
         sender_card = cursor.fetchone()
+        
+        if sender_card is None:
+            print("❌ Xato: Kartangiz bazada topilmadi!")
+            return
+
         sender_id, is_blocked, sender_balance = sender_card
 
-        cursor.execute("SELECT is_blocked FROM cards WHERE card_number = ?", (to_card,))
-        sender_card_1 = cursor.fetchone()
-        recipient_card_status = sender_card_1
-        if sender_card is None:
-            print("Error: Your card number is not found in the database.")
-            return
-
         if is_blocked:
-            print('Your card is blocked')
+            print("🚫 Kartangiz bloklangan!")
             return
-        if recipient_card_status and recipient_card_status[0] == 1:
-            user_choice = input("The recipient's card is blocked. Do you want to continue? (yes/no): ").strip().lower()
 
+        cursor.execute("SELECT is_blocked FROM cards WHERE card_number = ?", (to_card,))
+        recipient_card = cursor.fetchone()
+
+        if recipient_card is None:
+            print("❌ Xato: Qabul qiluvchi karta topilmadi!")
+            return
+
+        if recipient_card[0] == 1:
+            user_choice = input("⚠️ Qabul qiluvchi karta bloklangan. Davom etishni xohlaysizmi? (yes/no): ").strip().lower()
             if user_choice != 'yes':
-                print("Transaction canceled.")
+                print("❌ Tranzaksiya bekor qilindi.")
                 return
-        amount = input('Enter Amount: ').strip()
-        if not amount.isdigit() or int(amount) <= 0:
-            print("Error: Invalid amount.")
-            return
-        amount = int(amount)
 
-        if amount > sender_balance:
-            print("Error: Insufficient balance.")
-            return
+        while True:
+            amount = input("💰 Enter Amount: ").strip()
+            if not amount.isdigit() or int(amount) <= 0:
+                print("❌ Xato: Yaroqsiz summa, qayta kiriting!")
+                continue
+            amount = int(amount)
+            if amount > sender_balance:
+                print("❌ Xato: Balans yetarli emas!")
+                return
+            break
 
         cursor.execute("SELECT id FROM cards WHERE card_number = ?", (to_card,))
         receiver_card = cursor.fetchone()
-
-        if receiver_card is None:
-            print("Error: Destination card not found.")
-            return
-
         receiver_id = receiver_card[0]
 
+        # Tranzaksiya amalga oshirish
         cursor.execute("UPDATE cards SET balance = balance - ? WHERE card_number = ?", (amount, card_number))
         cursor.execute("UPDATE cards SET balance = balance + ? WHERE id = ?", (amount, receiver_id))
 
-        cursor.execute("EXEC insert_into_transactions ?, ?, ?, ?, ?, ?",
-                       (sender_id, receiver_id, 'transfer', amount, 'success', 0))
+        cursor.execute("EXEC insert_into_transactions ?, ?, ?, ?, ?, ?", 
+                    (sender_id, receiver_id, 'transfer', amount, 'success', 0))
         connection.commit()
-        print("Transaction completed successfully.")
 
+        print("\n⏳ Tranzaksiya amalga oshirilmoqda...", end="", flush=True)
+        time.sleep(2)
+        print("\r✅ Tranzaksiya muvaffaqiyatli amalga oshirildi!")
+    
     @staticmethod
-    def get_transactions(period):  # salimov
-        """Kunlik, haftalik tranzaksiyalarni ko‘rish"""
+    def get_transactions(period): # Salimov
+        """📊 Kunlik va haftalik tranzaksiyalarni ko‘rish"""
+        clear_screen()
+        print("=" * 50)
+        print(" " * 10 + "📊 TRANZAKSIYA TARIXI")
+        print("=" * 50)
+
         periods = {"day": 1, "week": 7}
         if period not in periods:
-            print("Error: Invalid period. Use 'day' or 'week'.")
+            print("❌ Xato: Noto‘g‘ri vaqt oralig‘i! 'day' yoki 'week' kiriting.")
             return
 
         days = periods[period]
@@ -128,14 +149,19 @@ class ControlTransactions:
         transactions = cursor.fetchall()
 
         if not transactions:
-            print("No transactions found for the selected period.")
+            print(f"📭 {days} kunlik tranzaksiyalar topilmadi.")
             return
 
-        for row in transactions:
-            print(row)
+        headers = ["ID", "Sender", "Receiver", "Type", "Amount", "Status", "Date"]
+        table = tabulate(transactions, headers, tablefmt="fancy_grid", numalign="center")
+
+        print("\n⏳ Ma'lumotlar yuklanmoqda...", end="", flush=True)
+        time.sleep(1.5)
+        print("\r✅ Tranzaksiyalar ro‘yxati tayyor!\n")
+        print(table)
 
     @staticmethod
-    def withdraw_deposit():  # salimov
+    def withdraw_deposit():  # Salimov
         """Pul yechish va depozit qilish"""
         operation = input("Withdraw or deposit (w/d): ").strip().lower()
         if operation not in ['w', 'd']:
@@ -191,6 +217,5 @@ class ControlTransactions:
                                (card_id, None, 'withdrawal', amount, 'success', 0))
             connection.commit()
             print("Withdrawal successful.")
-
 
 connection.commit()
