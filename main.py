@@ -29,8 +29,7 @@ txt = "\nTanlovni kiriting (1-6): "
 
 while True:
     Menus.print_menu()
-    command = int(input(f'{txt}'))
-
+    command = int(input(f'{txt}')) 
     if command == 1: # Done
         while True:
             Menus.menu_manage_users()

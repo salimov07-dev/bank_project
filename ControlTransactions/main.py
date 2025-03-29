@@ -4,8 +4,9 @@ import pyodbc
 import pprint
 import os
 import tabulate
+import time
 from email.message import EmailMessage
-from datetime import time
+from datetime import time as d_time
 from MangeUsers.main import clear_screen
 
 connection = pyodbc.connect(
@@ -32,11 +33,63 @@ class ControlTransactions:
         verification_code = str(random.randint(100000, 999999))  # 6 xonali kod
         verification_codes[to_email] = verification_code  # Kodni saqlash
 
-        msg = EmailMessage() # Salimov
-        msg.set_content(f"Your transaction verification code is: {verification_code}")
-        msg['Subject'] = "Transaction Verification Code"
+        msg = EmailMessage()
+        msg['Subject'] = "🔐 Transaction Verification Code"
         msg['To'] = to_email
-        msg['From'] = "salimovmironshoh07@gmail.com"  # O‘zingizning emailingiz
+        msg['From'] = "Bank Project"
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Code</title>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    padding: 20px;
+                    text-align: center;
+                }}
+                .container {{
+                    max-width: 400px;
+                    background: #ffffff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    margin: auto;
+                }}
+                h2 {{
+                    color: #333;
+                }}
+                .code {{
+                    font-size: 24px;
+                    font-weight: bold;
+                    background: #007bff;
+                    color: white;
+                    padding: 10px;
+                    border-radius: 5px;
+                    display: inline-block;
+                    margin: 10px 0;
+                }}
+                p {{
+                    color: #555;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>🔐 Your Transaction Verification Code</h2>
+                <p>Use the following code to verify your transaction:</p>
+                <div class="code">{verification_code}</div>
+                <p>This code is valid for a limited time. Do not share it with anyone.</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        msg.add_alternative(html_content, subtype="html")
 
         user = "salimovmironshoh07@gmail.com"
         password = "uobt pylh boce aazz"  # Gmail App Password ishlatish kerak!
@@ -72,6 +125,7 @@ class ControlTransactions:
 
         card_number = input("🔹 Enter your Card Number (without spaces): ").strip()
         user_name = input("🔹 Enter your Name: ").strip()
+        user_email = input('🔹 Enter your Email: ')
         to_card = input("🔹 Recipient Card Number: ").strip()
 
         if not card_number or not user_name or not to_card:
@@ -99,11 +153,10 @@ class ControlTransactions:
             return
 
         if recipient_card[0] == 1:
-            user_choice = input("⚠️ Qabul qiluvchi karta bloklangan. Davom etishni xohlaysizmi? (yes/no): ").strip().lower()
-            if user_choice != 'yes':
-                print("❌ Tranzaksiya bekor qilindi.")
-                return
-
+            user_choice = input("⚠️ Qabul qiluvchi karta bloklangan").strip().lower() 
+            print("❌ Tranzaksiya bekor qilindi.")
+            return
+        
         while True:
             amount = input("💰 Enter Amount: ").strip()
             if not amount.isdigit() or int(amount) <= 0:
@@ -114,7 +167,12 @@ class ControlTransactions:
                 print("❌ Xato: Balans yetarli emas!")
                 return
             break
+        ControlTransactions.send_verification_email(user_email)
+        user_input_code = input("Enter the verification code sent to your email: ").strip()
 
+        if not ControlTransactions.verify_transaction(user_email, user_input_code):
+            print("🚫 Transaction canceled due to incorrect verification code.")
+            return
         cursor.execute("SELECT id FROM cards WHERE card_number = ?", (to_card,))
         receiver_card = cursor.fetchone()
         receiver_id = receiver_card[0]

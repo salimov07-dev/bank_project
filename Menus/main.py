@@ -11,9 +11,8 @@ def print_menu():
     print("1️⃣  Foydalanuvchilarni boshqarish 👤")
     print("2️⃣  Tranzaksiya boshqaruvi 💰")
     print("3️⃣  Boshqa funksiyalar 🛠️")
-    print("4️⃣  Hisobot va Monitoring 📊")
-    print("5️⃣  Sozlamalar ⚙️")
-    print("6️⃣  Chiqish 🚪")  
+    print("4️⃣  Hisobot va Monitoring 📊") 
+    print("5️⃣  Chiqish 🚪")  
  
 def print_menu_ManageTransactions():
     print("\n" + "=" * 60)
