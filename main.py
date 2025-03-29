@@ -32,7 +32,7 @@ while True:
     command = int(input(f'{txt}')) 
     if command == 1: # Done
         while True:
-            Menus.menu_manage_users()
+            Menus.print_menu_ManageUsers()
             command = int(input(f'{txt}'))
             if command == 1:  # Salimov
                 Mu.ManageUsers.get_users() 
@@ -109,7 +109,7 @@ while True:
                         print(f"🔴 Tafsilotlar: {e}")
                         print("=" * 60)
             elif command == 3:  # Salimov
-                OtherFunc.OtherFunctions.view_transactions
+                OtherFunc.OtherFunctions.view_transactions()
             elif command == 4:  # Salimov
                 clear_screen()
                 print("=" * 70)
@@ -156,6 +156,5 @@ while True:
         break
 
 connection.commit()
-
 cursor.close()
 connection.close()

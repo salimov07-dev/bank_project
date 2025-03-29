@@ -13,7 +13,13 @@ def print_menu():
     print("3️⃣  Boshqa funksiyalar 🛠️")
     print("4️⃣  Hisobot va Monitoring 📊") 
     print("5️⃣  Chiqish 🚪")  
- 
+    
+def print_menu_ManageUsers():
+    print("1️⃣  Barcha foydalanuvchilarni ko‘rish 👀")
+    print("2️⃣  So‘nggi 1 oy ichida faol bo‘lganlar 📅")
+    print("3️⃣  Hisob holatini tekshirish 💳")
+    print("4️⃣  ◀️ Ortga qaytish")
+    
 def print_menu_ManageTransactions():
     print("\n" + "=" * 60)
     print(" 📌 Foydalanuvchilarni boshqarish")
@@ -21,16 +27,7 @@ def print_menu_ManageTransactions():
     print("1️⃣  📤 Kartadan kartaga pul o‘tkazmalar")
     print("2️⃣  📊 Kunlik, haftalik tranzaksiyalarni ko‘rish")
     print("3️⃣  💰 Pul yechish va depozit qilish")
-    print("4️⃣  🔙 Ortga qaytish")
-
-def print_menu_ManageTransactions():
-    print("\n" + "=" * 60)
-    print(" 📌 Tranzaksiya boshqaruvi")
-    print("=" * 60)
-    print("1️⃣  Kartadan kartaga pul o‘tkazmalar")
-    print("2️⃣  📊 Kunlik, haftalik tranzaksiyalarni ko‘rish")
-    print("3️⃣  💵 Pul yechish va depozit qilish")
-    print("4️⃣  🔙 Ortga qaytish")
+    print("4️⃣  🔙 Ortga qaytish") 
 
 def print_menu_other_functions():
     print("\n" + "=" * 60)
